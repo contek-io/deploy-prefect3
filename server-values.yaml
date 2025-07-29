@@ -1,0 +1,40 @@
+postgresql:
+  enabled: false
+
+secret:
+  create: true
+  username: postgres
+  password: rhett
+  host: postgres.research-eng
+  port: 5432
+  database: prefecthf
+
+server:
+  uiConfig:
+    prefectUiApiUrl: https://contekray.szidc/prefecthf/api
+  env:
+  - name: PREFECT_UI_SERVE_BASE
+    value: /prefecthf
+  resources:
+    requests:
+      cpu: "2"
+      memory: 2Gi
+    limits:
+      cpu: "4"
+      memory: 4Gi
+
+ingress:
+  enabled: true
+  servicePort: server-svc-port
+  className: kubesphere-router-cluster
+  host:
+    hostname: test-ingress.szidc
+    path: /prefecthf
+    pathType: ImplementationSpecific
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # /api will response 405 without this snippet, refer to:
+    # https://github.com/PrefectHQ/prefect/issues/11472#issuecomment-2417927654
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      rewrite ^/prefecthf/api/?(.*)$ /api/$1 break;

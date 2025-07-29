@@ -1,0 +1,6 @@
+worker:
+  apiConfig: selfHostedServer
+  config:
+    workPool: default
+  selfHostedServerApiConfig:
+    apiUrl: http://prefect-server.research-eng-hf:4200/api

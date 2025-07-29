@@ -1,0 +1,146 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: raycluster
+  namespace: research-eng-hf
+spec:
+  enableInTreeAutoscaling: true
+  rayVersion: "2.44.0"
+  autoscalerOptions:
+    # `upscalingMode` is "Default" or "Aggressive."
+    # Conservative: Upscaling is rate-limited; the number of pending worker pods is at most the size of the Ray cluster.
+    # Default: Upscaling is not rate-limited.
+    # Aggressive: An alias for Default; upscaling is not rate-limited.
+    upscalingMode: Aggressive
+    # `idleTimeoutSeconds` is the number of seconds to wait before scaling down a worker pod which is not using Ray resources.
+    idleTimeoutSeconds: 60
+    # `image` optionally overrides the Autoscaler's container image. The Autoscaler uses the same image as the Ray container by default.
+    ## image: "my-repo/my-custom-autoscaler-image:tag"
+    # `imagePullPolicy` optionally overrides the Autoscaler container's default image pull policy (IfNotPresent).
+    imagePullPolicy: Always
+    # Optionally specify the Autoscaler container's securityContext.
+    securityContext: {}
+    env: []
+    envFrom: []
+  # resources specifies optional resource request and limit overrides for the Autoscaler container.
+  # The default Autoscaler resource limits and requests should be sufficient for production use-cases.
+  # However, for large Ray clusters, we recommend monitoring container resource usage to determine if overriding the defaults is required.
+  # resources:
+  #   limits:
+  #     cpu: "500m"
+  #     memory: "512Mi"
+  #   requests:
+  #     cpu: "500m"
+  #     memory: "512Mi"
+
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-cpus: "0"
+    template:
+      spec:
+        imagePullSecrets:
+        - name: docker-credentials
+        containers:
+        - name: ray-head
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: shm
+          - mountPath: /cephfs
+            name: cephfs
+          - mountPath: /canon_md
+            name: canon-md
+          - mountPath: /indicators
+            name: indicators
+          image: harbor.szidc/reng-devops/prefect-hf:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "4"
+              memory: "4Gi"
+              ephemeral-storage: 1Mi
+            limits:
+              cpu: "8"
+              memory: "8Gi"
+              ephemeral-storage: 64Gi
+          env:
+          - name: RAY_enable_autoscaler_v2
+            value: "1"
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumes:
+        - name: shm
+          emptyDir:
+            medium: Memory
+        - name: cephfs
+          persistentVolumeClaim:
+            claimName: cephfs-pvc
+        - name: canon-md
+          persistentVolumeClaim:
+            claimName: canon-md-pvc
+        - name: indicators
+          persistentVolumeClaim:
+            claimName: indicators-pvc
+
+  workerGroupSpecs:
+  - groupName: small
+    rayStartParams:
+      resources: '"{\"parallel_small\": 1000000}"'
+    replicas: 0
+    minReplicas: 0
+    maxReplicas: 5
+    template:
+      spec:
+        imagePullSecrets:
+        - name: docker-credentials
+        containers:
+        - name: ray-worker
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: shm
+          - mountPath: /cephfs
+            name: cephfs
+          - mountPath: /canon_md
+            name: canon-md
+          - mountPath: /indicators
+            name: indicators
+          image: harbor.szidc/reng-devops/prefect-hf:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "10"
+              memory: "200Gi"
+              ephemeral-storage: 1Mi
+            limits:
+              cpu: "10"
+              memory: "200Gi"
+              ephemeral-storage: 64Gi
+          env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+        volumes:
+        - name: shm
+          emptyDir:
+            medium: Memory
+        - name: cephfs
+          persistentVolumeClaim:
+            claimName: cephfs-pvc
+        - name: canon-md
+          persistentVolumeClaim:
+            claimName: canon-md-pvc
+        - name: indicators
+          persistentVolumeClaim:
+            claimName: indicators-pvc

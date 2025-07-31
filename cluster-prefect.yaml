@@ -47,8 +47,6 @@ spec:
           volumeMounts:
           - mountPath: /dev/shm
             name: shm
-          - mountPath: /cephfs
-            name: cephfs
           - mountPath: /canon_md
             name: canon-md
           - mountPath: /indicators
@@ -79,9 +77,6 @@ spec:
         - name: shm
           emptyDir:
             medium: Memory
-        - name: cephfs
-          persistentVolumeClaim:
-            claimName: cephfs-pvc
         - name: canon-md
           persistentVolumeClaim:
             claimName: canon-md-pvc
@@ -105,8 +100,6 @@ spec:
           volumeMounts:
           - mountPath: /dev/shm
             name: shm
-          - mountPath: /cephfs
-            name: cephfs
           - mountPath: /canon_md
             name: canon-md
           - mountPath: /indicators
@@ -135,9 +128,6 @@ spec:
         - name: shm
           emptyDir:
             medium: Memory
-        - name: cephfs
-          persistentVolumeClaim:
-            claimName: cephfs-pvc
         - name: canon-md
           persistentVolumeClaim:
             claimName: canon-md-pvc

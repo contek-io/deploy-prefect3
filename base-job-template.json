@@ -17,6 +17,32 @@
         "backoffLimit": "{{ backoff_limit }}",
         "template": {
           "spec": {
+            "volumes": [
+              {
+                "name": "cephfs-public",
+                "persistentVolumeClaim": {
+                  "claimName": "cephfs-public"
+                }
+              },
+              {
+                "name": "tickdata",
+                "persistentVolumeClaim": {
+                  "claimName": "tickdata"
+                }
+              },
+              {
+                "name": "canon-md",
+                "persistentVolumeClaim": {
+                  "claimName": "canon-md-pvc"
+                }
+              },
+              {
+                "name": "indicators",
+                "persistentVolumeClaim": {
+                  "claimName": "indicators-pvc"
+                }
+              }
+            ],
             "imagePullSecrets": [
               {
                 "name": "docker-credentials"
@@ -41,6 +67,24 @@
                     "ephemeral-storage": "64Gi"
                   }
                 },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/cephfs/public",
+                    "name": "cephfs-public"
+                  },
+                  {
+                    "mountPath": "/tickdata",
+                    "name": "tickdata"
+                  },
+                  {
+                    "mountPath": "/canon_md",
+                    "name": "canon-md"
+                  },
+                  {
+                    "mountPath": "/indicators",
+                    "name": "indicators"
+                  }
+                ],
                 "name": "prefect-job"
               }
             ],

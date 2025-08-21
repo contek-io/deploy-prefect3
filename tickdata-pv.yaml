@@ -1,29 +1,30 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: cephfs-pv-research-eng-hf
+  name: tickdata-research-eng-hf
 spec:
   accessModes:
   - ReadWriteMany
   capacity:
-    storage: 1Ti
+    storage: 5Ti
   csi:
     driver: cephfs.csi.ceph.com
     nodeStageSecretRef:
       name: ceph-mount-secret
       namespace: default
     volumeAttributes:
-      "clusterID": "0cc27686-e775-11ee-9484-0907b4b07245"
-      "staticVolume": "true"
-      "rootPath": /nfsdata/k8s_share
-    volumeHandle: cephfs-static-pv
+      clusterID: 0cc27686-e775-11ee-9484-0907b4b07245
+      staticVolume: "true"
+      rootPath: /execution_data
+      fsName: nfs
+    volumeHandle: cephfs-tickdata
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: cephfs-pvc
+  name: tickdata
   namespace: research-eng-hf
 spec:
   accessModes:
@@ -31,5 +32,5 @@ spec:
   storageClassName: ""
   resources:
     requests:
-      storage: 1Ti
-  volumeName: cephfs-pv-research-eng-hf
+      storage: 5Ti
+  volumeName: tickdata-research-eng-hf
